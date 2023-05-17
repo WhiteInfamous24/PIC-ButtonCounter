@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>PIC-buttonCounter</name>
+            <name>PIC-ButtonCounter</name>
             <creation-uuid>b40927bd-0899-46de-ae1e-2c019321eceb</creation-uuid>
             <make-project-type>0</make-project-type>
             <sourceEncoding>ISO-8859-1</sourceEncoding>

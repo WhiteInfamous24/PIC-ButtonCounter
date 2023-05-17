@@ -2464,22 +2464,35 @@ ENDM
   CONFIG BOR4V = BOR40V ; Brown-out Reset Selection bit (Brown-out Reset set to 4.0V)
   CONFIG WRT = OFF ; Flash Program Memory Self Write Enable bits (Write protection off)
 
-; starting position of the program
+; starting position of the program < -pRESET_VECT=0h >
 psect RESET_VECT, class=CODE, delta=2
 RESET_VECT:
     GOTO setup
 
-; memory location to go when a interrupt happens
+; memory location to go when a interrupt happens < -pINT_VECT=4h >
 psect INT_VECT, class=CODE, delta=2
 INT_VECT:
 
+    ; save context
+    MOVWF W_TMP
+    SWAPF STATUS, W
+    MOVWF STATUS_TMP
+
     ; IMPLEMENT METHOD INTERRUPTION
+
+    ; return previous context
+    SWAPF STATUS_TMP, W
+    MOVWF STATUS
+    SWAPF W_TMP, F
+    SWAPF W_TMP, W
 
     RETFIE
 
 ; program variables
-AN0_VALUE EQU 0x20
-AN1_VALUE EQU 0x21
+W_TMP EQU 0x20
+STATUS_TMP EQU 0x21
+AN0_VALUE EQU 0x22
+AN1_VALUE EQU 0x23
 
 ; program setup
 setup:
@@ -2534,7 +2547,6 @@ main:
     BTFSS STATUS, 0 ; if the result is negative, turn on the LED on ((PORTB) and 07Fh), 1
     BSF PORTB, 1
 
-    ; return to main program loop
     GOTO main
 
 END RESET_VECT
