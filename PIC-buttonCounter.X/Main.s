@@ -43,62 +43,53 @@ INT_VECT:
 ; program variables
 W_TMP	    EQU 0x20
 STATUS_TMP  EQU	0x21
-AN0_VALUE   EQU 0x22
-AN1_VALUE   EQU 0x23
+CNTER	    EQU	0x22	    
 
 ; program setup
 setup:
     
-    ; port configuration
-    BANKSEL TRISA
-    MOVLW   0b00000011		; set AN0 and AN1 as inputs
-    MOVWF   TRISA
+    ; PORTC configuration
+    BANKSEL TRISC
+    MOVLW   0b00000000		; set the PORTC as output
+    MOVWF   TRISC
+    
+    ; PORTB configuration
     BANKSEL TRISB
-    CLRF    TRISB		; set RB0 and RB1 as outputs
+    MOVLW   0b00000001		; set RB0 pin as input
+    MOVWF   TRISB
     BANKSEL ANSELH
-    MOVLW   0b00000011		; enable analog inputs on AN0 and AN1
-    MOVWF   ANSELH
-
-    ; ADC configuration
-    BANKSEL ADCON1
-    CLRF    ADCON1		; set all pins as analog inputs
-    MOVLW   0b00000010		; select the reference voltage source (VDD and VSS)
-    BANKSEL ADCON0
-    MOVWF   ADCON0		; set the ADC in single conversion mode and select channel AN0
+    CLRF    ANSELH		; set PORTB as digital
+    
+    ; interruption configuration
+    BANKSEL INTCON		; enable global interruptions and enable interruptions in PORTB
+    MOVLW   0b10010000		; | GIE | PEIE | T0IE | INTE | RBIE | T0IF | INTF | RBIF |
+    MOVWF   INTCON
+    BANKSEL IOCB		; set PORTB pins that will interrupt
+    MOVLW   0b00000001		; set RB0 as interruption pin
+    MOVWF   IOCB
+    
+    ; initialize counter
+    MOVLW   0b00000000
+    MOVWF   CNTER
 
 ; main program loop
 main:
     
-    ; turn off the LEDs
-    BCF	    PORTB, 0		; turn off the LED on RB0
-    BCF	    PORTB, 1		; turn off the LED on RB1
-    
-    ; measure the voltage on pin AN0
-    BANKSEL ADCON0
-    BSF     ADCON0, 1		; start conversion
-    BTFSC   ADCON0, 1		; wait until the conversion is complete
-    GOTO    $-1
-    MOVF    ADRESH, 0		; read the conversion result in ADRESH and ADRESL
-    MOVWF   AN0_VALUE		; store the result in the variable AN0_VALUE
-
-    ; switch to channel AN1 and measure voltage on pin AN1
-    BANKSEL ADCON0
-    MOVLW   0b00000011		; select channel AN1
-    MOVWF   ADCON0		; set the ADC to measure voltage on pin AN1
-    BSF     ADCON0, 1		; start conversion (GO/DONE)
-    BTFSC   ADCON0, 1		; wait until the conversion is complete (GO/DONE)
-    GOTO    $-1
-    MOVF    ADRESH, 0		; read the conversion result in ADRESH and ADRESL
-    MOVWF   AN1_VALUE		; store the result in the variable AN1_VALUE
-
-    ; compare the measured voltages and turn on the corresponding LEDs
-    MOVF    AN0_VALUE, 0
-    SUBWF   AN1_VALUE, 0	; subtract AN1_VALUE from AN0_VALUE
-    BTFSC   STATUS, 0		; if the result is positive or zero, turn on the LED in RB0
-    BSF     PORTB, 0
-    BTFSS   STATUS, 0		; if the result is negative, turn on the LED on RB1
-    BSF     PORTB, 1
+    ; VOID MAIN
     
     GOTO    main
+    
+counterSecuenceTable:
+    ADDWF   PCL, F
+    RETLW   0b00000000
+    RETLW   0b00000001
+    RETLW   0b00000010
+    RETLW   0b00000011
+    RETLW   0b00000100
+    RETLW   0b00000101
+    RETLW   0b00000110
+    RETLW   0b00000111
+    RETLW   0b00001000
+    RETLW   0b00001001
 
 END RESET_VECT
