@@ -30,7 +30,14 @@ INT_VECT:
     SWAPF   STATUS, W
     MOVWF   STATUS_TMP
     
-    ; IMPLEMENT METHOD INTERRUPTION
+    ; interruption implementation
+    BANKSEL INTCON
+    BTFSC   INTCON, 1		; check if the interruption was the RB0 pin
+    CALL    incCnter		; increment counter
+    
+    ; clear INTF flag
+    BANKSEL INTCON
+    BCF	    INTCON, 1		; clear INTF flag
     
     ; return previous context
     SWAPF   STATUS_TMP, W
@@ -42,8 +49,7 @@ INT_VECT:
 
 ; program variables
 W_TMP	    EQU 0x20
-STATUS_TMP  EQU	0x21
-CNTER	    EQU	0x22	    
+STATUS_TMP  EQU	0x21	    
 
 ; program setup
 setup:
@@ -59,6 +65,11 @@ setup:
     MOVWF   TRISB
     BANKSEL ANSELH
     CLRF    ANSELH		; set PORTB as digital
+    BANKSEL OPTION_REG
+    BCF	    OPTION_REG, 7	; enable global pull-ups
+    BANKSEL WPUB
+    MOVLW   0b00000001		; enable RB0 pull-up
+    MOVWF   WPUB
     
     ; interruption configuration
     BANKSEL INTCON		; enable global interruptions and enable interruptions in PORTB
@@ -68,9 +79,10 @@ setup:
     MOVLW   0b00000001		; set RB0 as interruption pin
     MOVWF   IOCB
     
-    ; initialize counter
+    ; initialize PORTC
+    BANKSEL PORTC
     MOVLW   0b00000000
-    MOVWF   CNTER
+    MOVWF   PORTC
 
 ; main program loop
 main:
@@ -79,17 +91,11 @@ main:
     
     GOTO    main
     
-counterSecuenceTable:
-    ADDWF   PCL, F
-    RETLW   0b00000000
-    RETLW   0b00000001
-    RETLW   0b00000010
-    RETLW   0b00000011
-    RETLW   0b00000100
-    RETLW   0b00000101
-    RETLW   0b00000110
-    RETLW   0b00000111
-    RETLW   0b00001000
-    RETLW   0b00001001
+; increment PORTC value subroutine
+incCnter:
+    BANKSEL PORTC
+    INCF    PORTC, F
+    
+    RETURN
 
 END RESET_VECT

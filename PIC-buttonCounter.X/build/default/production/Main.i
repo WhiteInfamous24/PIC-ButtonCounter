@@ -2478,7 +2478,14 @@ INT_VECT:
     SWAPF STATUS, W
     MOVWF STATUS_TMP
 
-    ; IMPLEMENT METHOD INTERRUPTION
+    ; interruption implementation
+    BANKSEL INTCON
+    BTFSC INTCON, 1 ; check if the interruption was the ((PORTB) and 07Fh), 0 pin
+    CALL incCnter ; increment counter
+
+    ; clear ((INTCON) and 07Fh), 1 flag
+    BANKSEL INTCON
+    BCF INTCON, 1 ; clear ((INTCON) and 07Fh), 1 flag
 
     ; return previous context
     SWAPF STATUS_TMP, W
@@ -2491,62 +2498,51 @@ INT_VECT:
 ; program variables
 W_TMP EQU 0x20
 STATUS_TMP EQU 0x21
-AN0_VALUE EQU 0x22
-AN1_VALUE EQU 0x23
 
 ; program setup
 setup:
 
-    ; port configuration
-    BANKSEL TRISA
-    MOVLW 0b00000011 ; set AN0 and AN1 as inputs
-    MOVWF TRISA
-    BANKSEL TRISB
-    CLRF TRISB ; set ((PORTB) and 07Fh), 0 and ((PORTB) and 07Fh), 1 as outputs
-    BANKSEL ANSELH
-    MOVLW 0b00000011 ; enable analog inputs on AN0 and AN1
-    MOVWF ANSELH
+    ; PORTC configuration
+    BANKSEL TRISC
+    MOVLW 0b00000000 ; set the PORTC as output
+    MOVWF TRISC
 
-    ; ADC configuration
-    BANKSEL ADCON1
-    CLRF ADCON1 ; set all pins as analog inputs
-    MOVLW 0b00000010 ; select the reference voltage source (VDD and VSS)
-    BANKSEL ADCON0
-    MOVWF ADCON0 ; set the ADC in single conversion mode and select channel AN0
+    ; PORTB configuration
+    BANKSEL TRISB
+    MOVLW 0b00000001 ; set ((PORTB) and 07Fh), 0 pin as input
+    MOVWF TRISB
+    BANKSEL ANSELH
+    CLRF ANSELH ; set PORTB as digital
+    BANKSEL OPTION_REG
+    BCF OPTION_REG, 7 ; enable global pull-ups
+    BANKSEL WPUB
+    MOVLW 0b00000001 ; enable ((PORTB) and 07Fh), 0 pull-up
+    MOVWF WPUB
+
+    ; interruption configuration
+    BANKSEL INTCON ; enable global interruptions and enable interruptions in PORTB
+    MOVLW 0b10010000 ; | ((INTCON) and 07Fh), 7 | ((INTCON) and 07Fh), 6 | ((INTCON) and 07Fh), 5 | ((INTCON) and 07Fh), 4 | ((INTCON) and 07Fh), 3 | ((INTCON) and 07Fh), 2 | ((INTCON) and 07Fh), 1 | ((INTCON) and 07Fh), 0 |
+    MOVWF INTCON
+    BANKSEL IOCB ; set PORTB pins that will interrupt
+    MOVLW 0b00000001 ; set ((PORTB) and 07Fh), 0 as interruption pin
+    MOVWF IOCB
+
+    ; initialize PORTC
+    BANKSEL PORTC
+    MOVLW 0b00000000
+    MOVWF PORTC
 
 ; main program loop
 main:
 
-    ; turn off the LEDs
-    BCF PORTB, 0 ; turn off the LED on ((PORTB) and 07Fh), 0
-    BCF PORTB, 1 ; turn off the LED on ((PORTB) and 07Fh), 1
-
-    ; measure the voltage on pin AN0
-    BANKSEL ADCON0
-    BSF ADCON0, 1 ; start conversion
-    BTFSC ADCON0, 1 ; wait until the conversion is complete
-    GOTO $-1
-    MOVF ADRESH, 0 ; read the conversion result in ADRESH and ADRESL
-    MOVWF AN0_VALUE ; store the result in the variable AN0_VALUE
-
-    ; switch to channel AN1 and measure voltage on pin AN1
-    BANKSEL ADCON0
-    MOVLW 0b00000011 ; select channel AN1
-    MOVWF ADCON0 ; set the ADC to measure voltage on pin AN1
-    BSF ADCON0, 1 ; start conversion (((ADCON0) and 07Fh), 1/DONE)
-    BTFSC ADCON0, 1 ; wait until the conversion is complete (((ADCON0) and 07Fh), 1/DONE)
-    GOTO $-1
-    MOVF ADRESH, 0 ; read the conversion result in ADRESH and ADRESL
-    MOVWF AN1_VALUE ; store the result in the variable AN1_VALUE
-
-    ; compare the measured voltages and turn on the corresponding LEDs
-    MOVF AN0_VALUE, 0
-    SUBWF AN1_VALUE, 0 ; subtract AN1_VALUE from AN0_VALUE
-    BTFSC STATUS, 0 ; if the result is positive or zero, turn on the LED in ((PORTB) and 07Fh), 0
-    BSF PORTB, 0
-    BTFSS STATUS, 0 ; if the result is negative, turn on the LED on ((PORTB) and 07Fh), 1
-    BSF PORTB, 1
+    ; VOID MAIN
 
     GOTO main
+
+incCnter:
+    BANKSEL PORTC
+    INCF PORTC, F
+
+    RETURN
 
 END RESET_VECT
