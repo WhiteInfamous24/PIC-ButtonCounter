@@ -4,12 +4,12 @@ Linker command line:
 
 -W-3 \
   --edf=C:/Users/juanm/.mchp_packs/Microchip/PIC16Fxxx_DFP/1.4.149/xc8\pic\dat\20230322214319_en.msgs \
-  -cs -h+dist/default/production\PIC-buttonCounter.X.production.sym \
-  --cmf=dist/default/production\PIC-buttonCounter.X.production.cmf -z \
-  -Q16F887 -oC:\Users\juanm\AppData\Local\Temp\xcAs4k4.\driver_tmp_3.o \
+  -cs -h+dist/default/production\PIC-ButtonCounter.X.production.sym \
+  --cmf=dist/default/production\PIC-ButtonCounter.X.production.cmf -z \
+  -Q16F887 -oC:\Users\juanm\AppData\Local\Temp\xcAs8n0.\driver_tmp_3.o \
   -pRESET_VECT=0h -pINT_VECT=4h --fixupoverflow=error \
   -ver=XC8 PIC(R) Assembler --fixupoverflow=lstwarn \
-  -Mdist/default/production/PIC-buttonCounter.X.production.map -E1 \
+  -Mdist/default/production/PIC-ButtonCounter.X.production.map -E1 \
   --acfsm=1493 -ACODE=00h-07FFhx4 -ASTRCODE=00h-01FFFh -ASTRING=00h-0FFhx32 \
   -ACONST=00h-0FFhx32 -AENTRY=00h-0FFhx32 -ACOMMON=070h-07Fh \
   -ABANK0=020h-06Fh -ABANK1=0A0h-0EFh -ABANK2=0110h-016Fh \

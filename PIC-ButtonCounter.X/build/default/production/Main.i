@@ -2539,6 +2539,7 @@ main:
 
     GOTO main
 
+; increment PORTC value subroutine
 incCnter:
     BANKSEL PORTC
     INCF PORTC, F
