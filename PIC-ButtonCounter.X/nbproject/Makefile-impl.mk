@@ -24,7 +24,7 @@ CLEAN_SUBPROJECTS=${CLEAN_SUBPROJECTS_${SUBPROJECTS}}
 
 
 # Project Name
-PROJECTNAME=PIC-buttonCounter.X
+PROJECTNAME=PIC-ButtonCounter.X
 
 # Active Configuration
 DEFAULTCONF=default
