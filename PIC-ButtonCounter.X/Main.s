@@ -44,7 +44,6 @@ INT_VECT:
     MOVWF   STATUS
     SWAPF   W_TMP, F
     SWAPF   W_TMP, W
-    
     RETFIE
 
 ; program variables
@@ -95,7 +94,6 @@ main:
 incCnter:
     BANKSEL PORTC
     INCF    PORTC, F
-    
     RETURN
 
 END RESET_VECT
